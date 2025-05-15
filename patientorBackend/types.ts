@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { newPatientSchema } from "./utils";
+
+export type UnionOmit<T, k extends string | symbol | number> = T extends unknown
+    ? Omit<T, k>
+    : never;
+
 export enum Gender {
     Male = "male",
     Female = "female",
@@ -10,8 +15,51 @@ export type Diagnosis = {
     name: string;
     latin?: string;
 };
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface Entry {}
+export interface BaseEntry {
+    id: string;
+    date: string;
+    specialist: string;
+    diagnosisCodes?: Array<Diagnosis["code"]>;
+    description: string;
+}
+
+export enum HealthCheckRating {
+    Healthy = 0,
+    LowRisk = 1,
+    HighRisk = 2,
+    CriticalRisk = 3,
+}
+
+export interface HealthCheckEntryType extends BaseEntry {
+    healthCheckRating: HealthCheckRating;
+    type: "HealthCheck";
+}
+
+export interface DischargeType {
+    date: string;
+    criteria: string;
+}
+
+export interface HospitalEntryType extends BaseEntry {
+    type: "Hospital";
+    discharge: DischargeType;
+}
+
+export interface SickLeaveType {
+    startDate: string;
+    endDate: string;
+}
+
+export interface OccupationalHealthCareEntryType extends BaseEntry {
+    type: "OccupationalHealthcare";
+    sickLeave?: SickLeaveType;
+    employerName: string;
+}
+
+export type Entry =
+    | HospitalEntryType
+    | OccupationalHealthCareEntryType
+    | HealthCheckEntryType;
 
 export type Patient = {
     id: string;
@@ -20,7 +68,7 @@ export type Patient = {
     ssn: string;
     gender: Gender;
     occupation: string;
-    entries: Entry;
+    entries: Entry[];
 };
 export type NewPatient = z.infer<typeof newPatientSchema>;
 

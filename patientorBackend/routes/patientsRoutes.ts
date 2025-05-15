@@ -30,14 +30,6 @@ patientsRouter.get("/:id", (_req, res) => {
     try {
         const id = _req.params.id;
         const patient = patientService.getPatientById(id);
-        // ! Remove this after DDebugging
-        console.log("######################");
-        console.log("|");
-        console.log(patient);
-        console.log("|");
-        console.log("######################");
-        // ! Remove this after DDebugging
-
         res.json(patient);
     } catch (err) {
         if (err instanceof Error) {
