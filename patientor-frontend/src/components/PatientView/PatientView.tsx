@@ -4,6 +4,7 @@ import patients from "../../services/patients";
 import { useParams } from "react-router-dom";
 import { Alert } from "@mui/material";
 import axios from "axios";
+import { PatientEntries } from "./PatientEntries";
 
 export const PatientView = () => {
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -32,6 +33,7 @@ export const PatientView = () => {
                     <p>{patient.ssn}</p>
                     <p>{patient.name}</p>
                     <span>{patient.gender}</span>
+                    <PatientEntries entries={patient.entries} />
                 </div>
             )}
             {err && <Alert severity="error">{err}</Alert>}
