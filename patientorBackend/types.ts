@@ -61,6 +61,8 @@ export type Entry =
     | OccupationalHealthCareEntryType
     | HealthCheckEntryType;
 
+export type NewEntry = UnionOmit<Entry, "id">;
+
 export type Patient = {
     id: string;
     name: string;

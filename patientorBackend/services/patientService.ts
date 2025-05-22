@@ -1,3 +1,4 @@
+import { Entry, NewEntry } from "./../types";
 import patientsData from "../data/patients";
 import { NewPatient, Patient, PatientExcludingSsn } from "../types";
 import { v1 } from "uuid";
@@ -17,7 +18,6 @@ const getPatientById = (id: string): Patient => {
 const addPatient = (newPatientDetail: NewPatient): Patient => {
     const patient: Patient = {
         ...newPatientDetail,
-        // ! This should bt removed
         entries: [],
         id: v1(),
     };
@@ -25,8 +25,22 @@ const addPatient = (newPatientDetail: NewPatient): Patient => {
     return patient;
 };
 
+const addPatientEntry = (id: string, newEntry: NewEntry): Entry => {
+    const entry: Entry = {
+        ...newEntry,
+        id: v1(),
+    };
+    const patient = patientsData.find((patient) => patient.id === id);
+    if (!patient) {
+        throw new Error("Invalid Id. Patient doesnt Exist");
+    }
+    patient.entries.push(entry);
+    return entry;
+};
+
 export const patientService = {
     getAllPatients,
     addPatient,
     getPatientById,
+    addPatientEntry,
 };

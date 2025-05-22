@@ -2,7 +2,7 @@ import { Router } from "express";
 import { patientService } from "../services/patientService";
 import { z } from "zod";
 import { NewPatient } from "../types";
-import { newPatientSchema } from "../utils";
+import { newPatientSchema, toNewEntry } from "../utils";
 
 const patientsRouter = Router();
 
@@ -34,8 +34,26 @@ patientsRouter.get("/:id", (_req, res) => {
     } catch (err) {
         if (err instanceof Error) {
             res.status(404).send(err.message);
+            return;
         }
         res.status(500).send("Something Went Wrong");
+    }
+});
+
+patientsRouter.post("/:id/entry", (_req, res) => {
+    try {
+        const id = _req.params.id;
+        console.log(id);
+        const newEntry = toNewEntry(_req.body);
+        const entry = patientService.addPatientEntry(id, newEntry);
+        console.log(entry);
+        res.json(entry);
+    } catch (err) {
+        if (err instanceof Error) {
+            res.status(400).send(err.message);
+            return;
+        }
+        res.status(500).send("Something went wrong");
     }
 });
 
