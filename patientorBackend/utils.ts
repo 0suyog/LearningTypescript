@@ -8,6 +8,8 @@ import {
 	HealthCheckRating,
 	NewPatient,
 	NewEntry,
+	SickLeaveType,
+	DischargeType,
 } from "./types";
 
 // const isString = (text: unknown): text is string => {
@@ -34,19 +36,46 @@ const isNumber = (num: unknown): num is number => {
 	return typeof num === "number" || num instanceof Number;
 };
 
-const isDate = (date: string): boolean => {
-	return Boolean(Date.parse(date));
+const isDate = (date: unknown): boolean => {
+	return isString(date) && Boolean(Date.parse(date));
 };
 
-const isHelthCheckRating = (rating: number): rating is HealthCheckRating => {
-	return Object.values(HealthCheckRating)
-		.map((r) => r.toString())
-		.includes(rating.toString());
+const isHelthCheckRating = (rating: unknown): rating is HealthCheckRating => {
+	return (
+		isNumber(rating) &&
+		Object.values(HealthCheckRating)
+			.map((r) => r.toString())
+			.includes(rating.toString())
+	);
 };
 
 const isDiagnosisCodes = (codes: unknown): codes is Diagnosis["code"][] => {
 	if (codes instanceof Array) {
 		return codes.every((code) => typeof code === "string");
+	}
+	return false;
+};
+
+const isSickLeave = (sickLeave: unknown): sickLeave is SickLeaveType => {
+	if (
+		typeof sickLeave === "object" &&
+		sickLeave !== null &&
+		"startDate" in sickLeave &&
+		"endDate" in sickLeave
+	) {
+		if (isDate(sickLeave.endDate) && isDate(sickLeave.startDate)) return true;
+	}
+	return false;
+};
+
+const isDischarge = (discharge: unknown): discharge is DischargeType => {
+	if (
+		typeof discharge === "object" &&
+		discharge !== null &&
+		"date" in discharge &&
+		"criteria" in discharge
+	) {
+		if (isDate(discharge.date) && isString(discharge.criteria)) return true;
 	}
 	return false;
 };
@@ -74,33 +103,83 @@ const parseDescription = (descp: unknown): string => {
 };
 
 const parseHealthCheckRating = (rating: unknown): HealthCheckRating => {
-	if (isNumber(rating) && isHelthCheckRating(rating)) return rating;
+	if (isHelthCheckRating(rating)) return rating;
 	throw new Error("Invalid rating");
+};
+
+const parseDischarge = (discharge: unknown): DischargeType => {
+	if (isDischarge(discharge)) {
+		return discharge;
+	}
+	throw new Error("Invalid discharge");
+};
+
+const parseSickLeave = (sickLeave: unknown): SickLeaveType => {
+	if (isSickLeave(sickLeave)) {
+		return sickLeave;
+	}
+	throw new Error("Invalid Sick Leave");
+};
+
+const parseEmployerName = (employeeName: unknown): string => {
+	if (isString(employeeName)) {
+		return employeeName;
+	}
+
+	throw new Error("Invalid Employee name");
 };
 
 // * new entry parser
 
 export const toNewEntry = (entryDetail: unknown): NewEntry => {
-	if (!entryDetail || typeof entryDetail !== "object") {
+	if (typeof entryDetail !== "object" || entryDetail === null) {
 		throw new Error("Invalid Input");
 	}
-
+	const details = entryDetail as Record<string, unknown>;
 	if (
-		"date" in entryDetail &&
-		"specialist" in entryDetail &&
-		"diagnosisCodes" in entryDetail &&
-		"description" in entryDetail &&
-		"healthCheckRating" in entryDetail
+		"date" in details &&
+		"specialist" in details &&
+		"diagnosisCodes" in details &&
+		"description" in details &&
+		"type" in details &&
+		("discharge" in details ||
+			("sickLeave" in details && "employerName" in details) ||
+			"healthCheckRating" in details)
 	) {
-		const newEntry: NewEntry = {
-			date: parseDate(entryDetail.date),
-			specialist: parseSpecialist(entryDetail.specialist),
-			diagnosisCodes: parseDiagnosisCodes(entryDetail.diagnosisCodes),
-			description: parseDescription(entryDetail.description),
-			healthCheckRating: parseHealthCheckRating(entryDetail.healthCheckRating),
-			type: "HealthCheck",
+		if (
+			details.type !== "Hospital" &&
+			details.type !== "HealthCheck" &&
+			details.type !== "OccupationalHealthCare"
+		) {
+			throw new Error("Invalid Entry Type");
+		}
+		const newEntry = {
+			date: parseDate(details.date),
+			specialist: parseSpecialist(details.specialist),
+			diagnosisCodes: parseDiagnosisCodes(details.diagnosisCodes),
+			description: parseDescription(details.description),
 		};
-		return newEntry;
+		switch (details.type) {
+			case "Hospital":
+				return {
+					...newEntry,
+					type: details.type,
+					discharge: parseDischarge(details.discharge),
+				};
+			case "HealthCheck":
+				return {
+					...newEntry,
+					type: details.type,
+					healthCheckRating: parseHealthCheckRating(details.healthCheckRating),
+				};
+			case "OccupationalHealthCare":
+				return {
+					...newEntry,
+					type: details.type,
+					sickLeave: parseSickLeave(details.sickLeave),
+					employerName: parseEmployerName(details.employerName),
+				};
+		}
 	}
 	throw new Error("Inusufficient argument");
 };

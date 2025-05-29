@@ -14,11 +14,6 @@ import PatientListPage from "./components/PatientListPage";
 import { PatientView } from "./components/PatientView/PatientView";
 import diagnosisService from "./services/diagnoses";
 import DiagnosesContext from "./components/contexts/DiagnosesContext";
-import {
-	EntryForm,
-	EntryHookForm,
-	HookWUIform,
-} from "./components/PatientView/EntryForm";
 
 const App = () => {
 	const [patients, setPatients] = useState<Patient[]>([]);
@@ -59,9 +54,6 @@ const App = () => {
 							}
 						/>
 						<Route path="/:id" element={<PatientView />}></Route>
-						<Route path="/form" element={<EntryForm />} />
-						<Route path="/hookForm" element={<EntryHookForm />} />
-						<Route path="/hwf" element={<HookWUIform />} />
 					</Routes>
 				</Container>
 			</div>

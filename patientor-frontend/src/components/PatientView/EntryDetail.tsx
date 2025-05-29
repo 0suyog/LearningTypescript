@@ -13,7 +13,7 @@ export const EntryDetail = ({ entry }: Props) => {
 			return <HealthCheckEntry entry={entry} />;
 		case "Hospital":
 			return <HospitalEntry entry={entry} />;
-		case "OccupationalHealthcare":
+		case "OccupationalHealthCare":
 			return <OccupationalHealthCareEntry entry={entry} />;
 	}
 };
